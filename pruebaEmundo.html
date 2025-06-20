@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ediciones Mundo - Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="PruebaEmundo.css">
+</head>
+<body>
+    <!-- Menú Lateral -->
+    <nav id="MenuVertical">
+        <a href="#" class="Logo_volver_inicio">
+            <i class="fas fa-book-open"></i> Ediciones Mundo
+        </a>
+        
+        <div class="divisor_MenuVertical">Funciones</div>
+        <ul class="ul_MenuVertical">
+            <li><a href="#" class="active" data-form="entradas-form"><i class="fas fa-sign-in-alt"></i> Entradas</a></li>
+            <li><a href="#" data-form="salidas-form"><i class="fas fa-sign-out-alt"></i> Salidas</a></li>
+            <li><a href="#" data-form="libros-form"><i class="fas fa-book"></i> Registro de Libro</a></li>
+            <li><a href="#" data-form="categorias-form"><i class="fas fa-tags"></i> Categorías</a></li>
+            <li><a href="#" data-form="sucursal-form"><i class="fas fa-tags"></i> Sucursales</a></li>
+
+        </ul>
+        
+        <div class="divisor_MenuVertical">Existencias</div>
+        <ul class="ul_MenuVertical">
+            <li><a href="#" data-form="inventario-form"><i class="fas fa-boxes"></i> Inventario</a></li>
+            <li><a href="#" data-form="reporte-form"><i class="fas fa-chart-bar"></i> Reporte</a></li>
+        </ul>
+
+        <button id="btn-cerrar-sesion" class="btn-salir">Cerrar sesión</button>
+        
+    </nav>
+
+    <!-- Contenido Principal -->
+    <main id="Navegacion">
+        <!-- Formulario de Entrada -->
+        <div class="form-section active-form" id="entradas-form">
+            <h1><i class="fas fa-sign-in-alt"></i> Registro de Entrada</h1>
+            <form id="form-entradas">
+                <div class="form-group">
+                    <label>Tipo De Entrada</label>
+                    <select required>
+                        <option value="">Seleccionar</option>
+                        <option value="compra">Compra</option>
+                        <option value="devolucion">Devolución</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Código de Entrada:</label>
+                    <input type="text"required>
+                </div>
+                <div class="form-group">
+                    <label>Fecha De Entrada:</label>
+                    <input type="date" required>
+                </div>
+                <div class="form-group">
+                    <label>Libro:</label>
+                    <select id="select-libro-entrada" required>
+                        <option value="">Seleccionar libro</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Cantidad:</label>
+                    <input type="number" min="1" value="1" required>
+                </div>
+                <div class="form-group">
+                    <label>Costo:</label>
+                    <input type="number" required>
+                </div>
+                <div class="form-group">
+                    <label>Sucursal:</label>
+                    <select id="select-sucursal" required>
+                        <option value="">Seleccionar sucursal</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-cancel"><i class="fas fa-times"></i> Cancelar</button>
+                    <button type="submit" class="btn"><i class="fas fa-check"></i> Grabar</button>
+                </div>
+                
+            </form>
+        </div>
+
+        <!-- Formulario de Salida -->
+        <div class="form-section" id="salidas-form">
+            <h1><i class="fas fa-sign-out-alt"></i> Registro de Salida</h1>
+            <form id="form-salidas">
+                <div class="form-group">
+                    <label>Tipo De Salida</label>
+                    <select required>
+                        <option value="">Seleccionar</option>
+                        <option value="venta"></option>
+                        <option value="devolucion">Devolución</option>
+                        
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Código de Salida:</label>
+                    <input type="text"required>
+                </div>
+                <div class="form-group">
+                    <label>Fecha De Salida:</label>
+                    <input type="date" required>
+                </div>
+                <div class="form-group">
+                    <label>Libro:</label>
+                    <select id="select-libro-salida" required>
+                        <option value="">Seleccionar libro</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Cantidad:</label>
+                    <input type="number" min="1" value="1" id="cantidad-salida" required>
+                    <span class="hint">(Máximo disponible: <span id="max-disponible">0</span>)</span>
+                </div>
+                 <div class="form-group">
+                    <label>Precio de Venta:</label>
+                    <input type="number" required>
+                </div>
+                <div class="form-group">
+                    <label>Sucursal:</label>
+                    <select id="select-sucursal" required>
+                        <option value="">Seleccionar sucursal</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-cancel"><i class="fas fa-times"></i> Cancelar</button>
+                    <button type="submit" class="btn"><i class="fas fa-check"></i> Registrar Salida</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Formulario de Registro de Libro -->
+        <div class="form-section" id="libros-form">
+            <h1><i class="fas fa-book"></i> Registro de Libro</h1>
+            <form id="form-libros">
+                <div class="form-group">
+                    <label>Código:</label>
+                    <input type="text" id="codigo-libro"  required>
+                </div>
+                <div class="form-group">
+                    <label>Nombre:</label>
+                    <input type="text" id="nombre-libro" placeholder="Nombre del libro" required>
+                </div>
+                <div class="form-group">
+                    <label>Categoría:</label>
+                    <select id="categoria-libro">
+                        <option value="">Seleccione una categoría</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Costo:</label>
+                    <input type="number" id="costo-libro" min="0" step="0.01" placeholder="0.00" required>
+                </div>
+                <div class="form-group">
+                    <label>Existencia Inicial:</label>
+                    <input type="number" id="existencia-libro" min="0" value="0" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" id="btn-seleccionar-libro" class="btn"><i class="fas fa-search"></i> Seleccionar</button>
+                    <button type="button" id="btn-listar-libros" class="btn"><i class="fas fa-list"></i> Listar</button>
+                    <button type="submit" class="btn"><i class="fas fa-check"></i> Grabar</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Formulario de Categorías -->
+       <div class="form-section" id="categorias-form">
+            <h1><i class="fas fa-tags"></i> Registro de Categorías</h1>
+            <form id="form-categorias">
+                <div class="form-group">
+                    <label>Nombre de la categoría:</label>
+                    <input type="text" id="nombre-categoria" placeholder="Ej: Novela, Ciencia Ficción" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn"><i class="fas fa-check"></i> Registrar Categoría</button>
+                </div>
+            </form>
+        </div>
+        <div class="form-section" id="sucursal-form">
+            <h1><i class="fas fa-tags"></i> Registro de Sucursales</h1>
+            <form id="formularioEdiciones">
+              <label for="idInput">ID:</label>
+              <input type="text" id="idInput" name="idInput" placeholder="Ingrese ID" required />
+
+              <label for="sucursalSelect">Sucursal:</label>
+              <select id="sucursalSelect" name="sucursalSelect" required>
+                <option value="">--Seleccione una sucursal--</option>
+                <option value="nicaragua">Nicaragua</option>
+                <option value="honduras">Honduras</option>
+                <option value="costa_rica">Costa Rica</option>
+                <option value="panama">Panamá</option>
+              </select>
+
+              <button type="submit">Enviar</button>
+            </form>
+        </div>
+
+        <!-- Tabla de Inventario -->
+        <div class="form-section table-section" id="inventario-form">
+            <h1><i class="fas fa-boxes"></i> Inventario de Libros</h1>
+            <div class="table-container">
+                <table id="tabla-inventario">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Nombre</th>
+                            <th>Categoría</th>
+                            <th>Costo</th>
+                            <th>Existencia</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Filas se llenarán con JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="table-actions">
+                <button id="btn-generar-reporte" class="btn"><i class="fas fa-file-export"></i> Generar Reporte</button>
+            </div>
+        </div>
+
+        <!-- Reporte -->
+        <div class="form-section" id="reporte-form">
+            <h1><i class="fas fa-chart-bar"></i> Reportes</h1>
+            <div class="reporte-options">
+                <button id="btn-reporte-inventario" class="btn"><i class="fas fa-boxes"></i> Reporte de Inventario</button>
+                <button id="btn-reporte-movimientos" class="btn"><i class="fas fa-exchange-alt"></i> Reporte de Movimientos</button>
+            </div>
+            <div id="reporte-contenido" class="reporte-contenido"></div>
+        </div>
+
+
+    </main>
+    
+
+    <script src="pruebaEmundo.js"></script>
+
+
+
+</body>
+</html>
