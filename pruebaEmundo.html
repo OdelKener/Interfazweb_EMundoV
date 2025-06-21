@@ -226,12 +226,13 @@
 
         <!-- Reporte -->
         <div class="form-section" id="reporte-form">
-            <h1><i class="fas fa-chart-bar"></i> Reportes</h1>
-            <div class="reporte-options">
-                <button id="btn-reporte-inventario" class="btn"><i class="fas fa-boxes"></i> Reporte de Inventario</button>
-                <button id="btn-reporte-movimientos" class="btn"><i class="fas fa-exchange-alt"></i> Reporte de Movimientos</button>
-            </div>
-            <div id="reporte-contenido" class="reporte-contenido"></div>
+
+          <h1 style="text-align:center; color:#1e2a38;">Distribución de Libros por Categoría</h1>
+          <div class="chart-container" style="width: 80%; max-width: 700px; margin: 40px auto; background: white; padding: 30px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);">
+          <canvas id="librosChart"></canvas>
+        </div>
+
+          
         </div>
 
 
@@ -239,6 +240,46 @@
     
 
     <script src="pruebaEmundo.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const data = {
+    labels: ['Ficción', 'No Ficción', 'Infantil', 'Educativos', 'Científicos', 'Históricos', 'Otros'],
+    datasets: [{
+      label: 'Cantidad de Libros',
+      data: [12, 9, 5, 7, 4, 3, 2],
+      backgroundColor: [
+        '#1e2a38', '#007bff', '#17a2b8', '#ffc107',
+        '#dc3545', '#28a745', '#adb5bd'
+      ],
+      hoverOffset: 10
+    }]
+  };
+
+  const config = {
+    type: 'pie',
+    data: data,
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'bottom' },
+        title: {
+          display: true,
+          text: 'Distribución de Libros por Categoría',
+          font: { size: 18 }
+        }
+      }
+    }
+  };
+
+  // Inicializar el gráfico solo cuando se muestre el div de reporte
+  document.querySelector('[data-form="reporte-form"]').addEventListener('click', () => {
+    setTimeout(() => {
+      new Chart(document.getElementById('librosChart'), config);
+    }, 300);
+  });
+</script>
+
 
 
 

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Distribución de Libros</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f8f9fa;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #1e2a38;
+    }
+    .chart-container {
+      width: 80%;
+      max-width: 700px;
+      margin: 40px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+</head>
+<body>
+  <h1>Distribución de Libros por Categoría</h1>
+  <div class="chart-container">
+    <canvas id="librosChart"></canvas>
+  </div>
+
+  <script>
+    const data = {
+      labels: [
+        'Ficción',
+        'No Ficción',
+        'Infantil',
+        'Educativos',
+        'Científicos',
+        'Históricos',
+        'Otros'
+      ],
+      datasets: [{
+        label: 'Cantidad de Libros',
+        data: [12, 9, 5, 7, 4, 3, 2],
+        backgroundColor: [
+          '#1e2a38',
+          '#007bff',
+          '#17a2b8',
+          '#ffc107',
+          '#dc3545',
+          '#28a745',
+          '#adb5bd'
+        ],
+        hoverOffset: 10
+      }]
+    };
+
+    const config = {
+      type: 'pie',
+      data: data,
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'bottom',
+          },
+          title: {
+            display: true,
+            text: 'Distribución de Libros por Categoría',
+            font: {
+              size: 18
+            }
+          }
+        }
+      }
+    };
+
+    new Chart(document.getElementById('librosChart'), config);
+  </script>
+
+  
+</body>
+</html>

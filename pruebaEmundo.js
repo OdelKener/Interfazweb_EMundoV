@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-const BASE_URL = 'https://4b69-200-62-78-139.ngrok-free.app';
+const BASE_URL = 'http://127.0.0.1:8000/';
 const TOKEN = localStorage.getItem('userToken') || '';
 
 async function cargarCategorias() {
