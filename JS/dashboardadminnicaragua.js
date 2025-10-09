@@ -5,7 +5,7 @@ function getUsuario() {
     const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
     if (!usuario.username) {
         alert('No estás autenticado. Por favor inicia sesión.');
-        window.location.href = '../HTML/login.html';
+        window.location.href = '/index.html';
     }
     return usuario;
 }
@@ -1041,7 +1041,7 @@ document.addEventListener('DOMContentLoaded', () => {
     btnSalir?.addEventListener('click', () => {
         if (confirm('¿Estás seguro que querés cerrar sesión?')) {
             localStorage.removeItem('usuario');
-            window.location.href = '../HTML/login.html';
+            window.location.href = '/index.html';
         }
     });
 

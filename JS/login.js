@@ -278,7 +278,7 @@ class LoginManager {
     static logout() {
         localStorage.removeItem('usuario');
         sessionStorage.removeItem('usuario');
-        window.location.href = '../HTML/login.html';
+        window.location.href = '/index.html';
     }
 
     // Método para verificar si el usuario está autenticado

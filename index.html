@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EMundo - Inicio de Sesión</title>
+  <link rel="stylesheet" href="../CSS/login.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <div class="background-container">
+    <div class="background-overlay"></div>
+  </div>
+  
+  <div class="login-container">
+    <div class="login-card">
+      <div class="logo-container">
+        <div class="logo-icon">
+          <i class="fas fa-globe-americas"></i>
+        </div>
+        <h1 class="title">EMundo</h1>
+        <p class="subtitle">Inicia sesión en tu cuenta</p>
+      </div>
+      
+      <form id="loginForm" class="login-form">
+        <div class="input-group">
+          <div class="input-icon">
+            <i class="fas fa-user"></i>
+          </div>
+          <input type="text" id="username" placeholder="Usuario" required>
+        </div>
+
+        <div class="input-group">
+          <div class="input-icon">
+            <i class="fas fa-lock"></i>
+          </div>
+          <input type="password" id="password" placeholder="Contraseña" required>
+          <button type="button" class="toggle-password" id="togglePassword">
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
+
+        <div class="input-group">
+          <div class="input-icon">
+            <i class="fas fa-flag"></i>
+          </div>
+          <select id="pais" required>
+            <option value="">Selecciona un país</option>
+            <option value="1">Nicaragua</option>
+            <option value="2">Honduras</option>
+            <option value="3">Costa Rica</option>
+            <option value="4">Panamá</option>
+          </select>
+        </div>
+
+        <div class="remember-forgot">
+          <div class="remember-me">
+            <input type="checkbox" id="remember">
+            <label for="remember">Recordarme</label>
+          </div>
+          <a href="#" class="forgot-password">¿Olvidaste tu contraseña?</a>
+        </div>
+
+        <button type="submit" class="btn-login">
+          <span class="btn-text">Ingresar</span>
+          <div class="btn-loader">
+            <div class="loader"></div>
+          </div>
+        </button>
+        
+        <p id="mensaje" class="mensaje"></p>
+      </form>
+      
+      <div class="register-link">
+        <p>¿No tienes una cuenta? <a href="#">Regístrate</a></p>
+      </div>
+    </div>
+  </div>
+
+  <script src="../JS/login.js"></script>
+</body>
+</html>
