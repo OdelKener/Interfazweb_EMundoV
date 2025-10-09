@@ -1,0 +1,16 @@
+{
+  "public": ".",
+  "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "**",
+      "destination": "../HTML/login.html"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "../HTML/login.html"
+    }
+  ]
+}
