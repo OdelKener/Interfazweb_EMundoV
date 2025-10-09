@@ -140,3 +140,45 @@ body {
         font-size: 20px;
     }
 }
+
+/* Estados adicionales para el formulario */
+.login-form.submitting {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.input-group.focused {
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+    background: white;
+}
+
+/* Mejoras para select */
+.input-group select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%237f8c8d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    background-size: 16px;
+    padding-right: 45px;
+}
+
+/* Estados de validación */
+.input-group.invalid {
+    border-color: #e74c3c;
+    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.2);
+}
+
+.input-group.valid {
+    border-color: #2ecc71;
+}
+
+/* Animación de shake para errores */
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+.shake {
+    animation: shake 0.4s ease-in-out;
+}
