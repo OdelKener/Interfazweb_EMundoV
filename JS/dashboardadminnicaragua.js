@@ -1,5 +1,5 @@
 // -------------------- CONFIGURACIÓN GENERAL --------------------
-const BASE_URL = 'http://127.0.0.1:8000/';
+const BASE_URL = 'https://979421631b87.ngrok-free.app/';
 
 function getUsuario() {
     const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
