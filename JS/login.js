@@ -1,4 +1,4 @@
-const API_BASE = 'https://979421631b87.ngrok-free.app/';
+const API_BASE = ' http://127.0.0.1:8000/';
 
 class LoginManager {
     constructor() {

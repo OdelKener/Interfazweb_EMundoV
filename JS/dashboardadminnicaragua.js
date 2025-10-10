@@ -1,6 +1,36 @@
 // -------------------- CONFIGURACIÓN GENERAL --------------------
-const BASE_URL = 'https://979421631b87.ngrok-free.app/';
+const BASE_URL = 'http://127.0.0.1:8000/';
 
+// -------------------- FUNCIÓN FETCH OPTIMIZADA --------------------
+async function fetchJson(url, options = {}) {
+    const fullUrl = url.startsWith('http') ? url : `${BASE_URL}${url}`;
+    
+    console.log(`🌐 Fetch: ${fullUrl}`);
+    
+    try {
+        const response = await fetch(fullUrl, {
+            method: options.method || 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                ...options.headers
+            },
+            body: options.body
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        return await response.json();
+
+    } catch (error) {
+        console.error(`❌ Fetch error: ${url}`, error);
+        throw error;
+    }
+}
+
+// -------------------- FUNCIONES BÁSICAS (MANTENER EL RESTO IGUAL) --------------------
 function getUsuario() {
     const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
     if (!usuario.username) {
@@ -10,12 +40,8 @@ function getUsuario() {
     return usuario;
 }
 
-// -------------------- FUNCIONES GENERALES --------------------
-async function fetchJson(url, options = {}) {
-    const res = await fetch(url, { ...options, headers: { 'Content-Type': 'application/json', ...(options.headers || {}) } });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return res.json();
-}
+// ... (MANTENER TODAS LAS DEMÁS FUNCIONES EXACTAMENTE COMO LAS TENÍAS EN LA VERSIÓN ANTERIOR)
+// SOLO CAMBIA LA FUNCIÓN fetchJson
 
 // -------------------- FUNCIÓN PARA ACTUALIZAR EXISTENCIA DE LIBROS --------------------
 async function actualizarExistenciaLibro(libroId, cantidad, operacion = 'entrada') {
@@ -1105,7 +1131,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
-
 
 
 
