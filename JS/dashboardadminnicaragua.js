@@ -1,5 +1,5 @@
 /// -------------------- CONFIGURACIÓN GENERAL --------------------
-const BASE_URL = 'https://6fb5146f8196.ngrok-free.app/';
+const BASE_URL = 'https://6fb5146f8196.ngrok-free.app';
 
 // -------------------- FUNCIÓN FETCH MEJORADA CON PAGINACIÓN --------------------
 async function fetchJson(url, options = {}) {

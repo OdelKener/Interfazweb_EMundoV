@@ -1,4 +1,4 @@
-const API_BASE = 'https://6fb5146f8196.ngrok-free.app/';
+const API_BASE = 'https://6fb5146f8196.ngrok-free.app';
 
 class LoginManager {
     constructor() {
