@@ -598,3 +598,140 @@ table tr:last-child td {
         border: 2px solid #000;
     }
 }
+.menu-toggle {
+    display: none;
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1100;
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    color: white;
+    border: none;
+    padding: 12px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 1.2em;
+    box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+    transition: all 0.3s ease;
+}
+
+.menu-toggle:hover {
+    transform: scale(1.1);
+}
+
+/* Overlay para móviles */
+.menu-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+}
+
+/* =========================== */
+/* MEDIA QUERIES ACTUALIZADOS */
+/* =========================== */
+
+/* Tablets pequeñas y móviles grandes */
+@media (max-width: 768px) {
+    .menu-toggle {
+        display: block;
+    }
+    
+    .menu-overlay {
+        display: block;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .menu-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+    
+    #MenuVertical {
+        transform: translateX(-100%);
+        width: 280px;
+        transition: transform 0.3s ease;
+    }
+    
+    #MenuVertical.menu-open {
+        transform: translateX(0);
+    }
+    
+    #Navegacion {
+        margin-left: 0;
+        padding: 70px 15px 20px; /* Más padding top para el botón */
+    }
+    
+    /* Asegurar que todos los formularios sean accesibles */
+    .form-section {
+        display: block !important; /* Forzar visibilidad temporal */
+        opacity: 1;
+        margin-bottom: 20px;
+    }
+    
+    /* Ocultar todos excepto el activo */
+    .form-section:not(.active-form) {
+        display: none !important;
+    }
+    
+    .form-section.active-form {
+        display: block !important;
+        animation: slideIn 0.3s ease;
+    }
+    
+    @keyframes slideIn {
+        from { 
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+}
+
+/* Móviles */
+@media (max-width: 480px) {
+    .menu-toggle {
+        top: 15px;
+        left: 15px;
+        padding: 10px 12px;
+    }
+    
+    #Navegacion {
+        padding: 60px 10px 15px;
+    }
+    
+    .form-section {
+        padding: 20px;
+        margin-bottom: 15px;
+    }
+    
+    /* Mejorar visibilidad de formularios en móviles */
+    .form-section h1 {
+        font-size: 1.3em;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    
+    .form-group {
+        margin-bottom: 15px;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .btn {
+        width: 100%;
+        padding: 14px;
+    }
+}

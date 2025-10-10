@@ -1062,6 +1062,50 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+// Funcionalidad responsiva para móviles
+document.addEventListener('DOMContentLoaded', function() {
+    const menuToggle = document.getElementById('menuToggle');
+    const menuVertical = document.getElementById('MenuVertical');
+    const menuOverlay = document.createElement('div');
+    
+    // Crear overlay
+    menuOverlay.className = 'menu-overlay';
+    document.body.appendChild(menuOverlay);
+    
+    // Toggle menu
+    if (menuToggle) {
+        menuToggle.addEventListener('click', function() {
+            menuVertical.classList.toggle('menu-open');
+            menuOverlay.classList.toggle('active');
+        });
+        
+        // Cerrar menu al hacer clic en overlay
+        menuOverlay.addEventListener('click', function() {
+            menuVertical.classList.remove('menu-open');
+            menuOverlay.classList.remove('active');
+        });
+    }
+    
+    // Cerrar menu al seleccionar una opción (en móviles)
+    const menuLinks = document.querySelectorAll('.ul_MenuVertical a');
+    menuLinks.forEach(link => {
+        link.addEventListener('click', function() {
+            if (window.innerWidth <= 768) {
+                menuVertical.classList.remove('menu-open');
+                menuOverlay.classList.remove('active');
+            }
+        });
+    });
+    
+    // Ajustar comportamiento en resize
+    window.addEventListener('resize', function() {
+        if (window.innerWidth > 768) {
+            menuVertical.classList.remove('menu-open');
+            menuOverlay.classList.remove('active');
+        }
+    });
+});
+
 
 
 
