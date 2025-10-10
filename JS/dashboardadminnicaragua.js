@@ -1,9 +1,17 @@
-// -------------------- CONFIGURACIÓN GENERAL --------------------
-const BASE_URL = 'http://127.0.0.1:8000/';
+/// -------------------- CONFIGURACIÓN GENERAL --------------------
+const BASE_URL = 'https://7d89e4af5064.ngrok-free.app';
 
-// -------------------- FUNCIÓN FETCH OPTIMIZADA --------------------
+// -------------------- FUNCIÓN FETCH MEJORADA CON PAGINACIÓN --------------------
 async function fetchJson(url, options = {}) {
-    const fullUrl = url.startsWith('http') ? url : `${BASE_URL}${url}`;
+    // Construir URL correctamente
+    let fullUrl;
+    if (url.startsWith('http')) {
+        fullUrl = url;
+    } else {
+        const base = BASE_URL.endsWith('/') ? BASE_URL.slice(0, -1) : BASE_URL;
+        const path = url.startsWith('/') ? url : `/${url}`;
+        fullUrl = `${base}${path}`;
+    }
     
     console.log(`🌐 Fetch: ${fullUrl}`);
     
@@ -15,14 +23,32 @@ async function fetchJson(url, options = {}) {
                 'Accept': 'application/json',
                 ...options.headers
             },
-            body: options.body
+            body: options.body,
+            credentials: 'include'
         });
 
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
-        return await response.json();
+        const data = await response.json();
+        console.log(`📦 Response data:`, data);
+
+        // ✅ MANEJAR PAGINACIÓN - Si tiene 'results', devolver eso
+        if (data && typeof data === 'object' && Array.isArray(data.results)) {
+            console.log(`✅ Datos paginados encontrados: ${data.results.length} items`);
+            return data.results;
+        }
+        
+        // Si es array directo, devolverlo
+        if (Array.isArray(data)) {
+            console.log(`✅ Array directo: ${data.length} items`);
+            return data;
+        }
+        
+        // Si es un solo objeto, devolverlo
+        console.log(`✅ Objeto individual recibido`);
+        return data;
 
     } catch (error) {
         console.error(`❌ Fetch error: ${url}`, error);
@@ -30,7 +56,26 @@ async function fetchJson(url, options = {}) {
     }
 }
 
-// -------------------- FUNCIONES BÁSICAS (MANTENER EL RESTO IGUAL) --------------------
+// -------------------- VERIFICACIÓN RÁPIDA --------------------
+async function verificarConexion() {
+    console.log('🔍 Verificando conexión con el API...');
+    
+    try {
+        const categorias = await fetchJson('InventarioLibros/Categorias/categorias/');
+        const libros = await fetchJson('InventarioLibros/Libros/libros/');
+        
+        console.log(`✅ CONEXIÓN EXITOSA:`);
+        console.log(`   - Categorías: ${categorias.length}`);
+        console.log(`   - Libros: ${libros.length}`);
+        
+        return true;
+    } catch (error) {
+        console.error('❌ Error de conexión:', error);
+        return false;
+    }
+}
+
+// -------------------- FUNCIONES BÁSICAS --------------------
 function getUsuario() {
     const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
     if (!usuario.username) {
@@ -40,14 +85,11 @@ function getUsuario() {
     return usuario;
 }
 
-// ... (MANTENER TODAS LAS DEMÁS FUNCIONES EXACTAMENTE COMO LAS TENÍAS EN LA VERSIÓN ANTERIOR)
-// SOLO CAMBIA LA FUNCIÓN fetchJson
-
 // -------------------- FUNCIÓN PARA ACTUALIZAR EXISTENCIA DE LIBROS --------------------
 async function actualizarExistenciaLibro(libroId, cantidad, operacion = 'entrada') {
     try {
         // Obtener el libro actual
-        const libro = await fetchJson(`${BASE_URL}InventarioLibros/Libros/libros/${libroId}/`);
+        const libro = await fetchJson(`InventarioLibros/Libros/libros/${libroId}/`);
         
         // Calcular nueva existencia
         let nuevaExistencia = libro.existencia || 0;
@@ -66,7 +108,7 @@ async function actualizarExistenciaLibro(libroId, cantidad, operacion = 'entrada
             costoactual: libro.costoactual // Mantener el costo actual
         };
         
-        await fetchJson(`${BASE_URL}InventarioLibros/Libros/libros/${libroId}/`, {
+        await fetchJson(`InventarioLibros/Libros/libros/${libroId}/`, {
             method: 'PUT',
             body: JSON.stringify(datosActualizados)
         });
@@ -86,8 +128,9 @@ async function cargarCategoriasParaLibros() {
     if (!select) return;
 
     try {
-        const data = await fetchJson(`${BASE_URL}InventarioLibros/Categorias/categorias/`);
-        const categorias = Array.isArray(data) ? data : data.results || [];
+        const categorias = await fetchJson('InventarioLibros/Categorias/categorias/');
+        
+        console.log(`✅ Categorías cargadas: ${categorias.length}`);
 
         select.innerHTML = '';
         const opcionInicial = document.createElement('option');
@@ -101,8 +144,10 @@ async function cargarCategoriasParaLibros() {
             option.textContent = cat.nombre;
             select.appendChild(option);
         });
+        
+        console.log(`✅ ${categorias.length} categorías agregadas al select`);
     } catch (err) {
-        console.error('Error cargando categorías para libros:', err);
+        console.error('❌ Error cargando categorías para libros:', err);
     }
 }
 
@@ -118,8 +163,8 @@ function configurarFormularioCategoria() {
 
         try {
             const url = editandoId
-                ? `${BASE_URL}InventarioLibros/Categorias/categorias/${editandoId}/`
-                : `${BASE_URL}InventarioLibros/Categorias/categorias/`;
+                ? `InventarioLibros/Categorias/categorias/${editandoId}/`
+                : `InventarioLibros/Categorias/categorias/`;
             const method = editandoId ? 'PUT' : 'POST';
             await fetchJson(url, { method, body: JSON.stringify({ nombre }) });
             alert(editandoId ? '¡Categoría actualizada!' : '¡Categoría registrada!');
@@ -127,7 +172,7 @@ function configurarFormularioCategoria() {
             editandoId = null;
             cargarCategoriasParaLibros();
         } catch (err) {
-            console.error('Error guardando categoría:', err);
+            console.error('❌ Error guardando categoría:', err);
             alert('Error al guardar categoría');
         }
     });
@@ -141,11 +186,11 @@ function configurarFormularioCategoria() {
 window.eliminarCategoria = async id => {
     if (!confirm('¿Seguro que querés eliminar esta categoría?')) return;
     try {
-        await fetchJson(`${BASE_URL}InventarioLibros/Categorias/categorias/${id}/`, { method: 'DELETE' });
+        await fetchJson(`InventarioLibros/Categorias/categorias/${id}/`, { method: 'DELETE' });
         alert('¡Categoría eliminada!');
         cargarCategoriasParaLibros();
     } catch (err) {
-        console.error('Error al eliminar categoría:', err);
+        console.error('❌ Error al eliminar categoría:', err);
         alert('No se pudo eliminar la categoría.');
     }
 };
@@ -154,12 +199,23 @@ window.eliminarCategoria = async id => {
 async function cargarLibros(categoriaId = null) {
     const tabla = document.querySelector('#tabla-inventario tbody');
     if (!tabla) return;
+    
     try {
-        const data = await fetchJson(`${BASE_URL}InventarioLibros/Libros/libros/`);
-        const libros = Array.isArray(data) ? data : data.results || [];
+        const libros = await fetchJson('InventarioLibros/Libros/libros/');
+        
+        console.log(`✅ Libros cargados: ${libros.length}`);
 
         tabla.innerHTML = '';
-        const filtrados = categoriaId ? libros.filter(lib => lib.categorias_id == parseInt(categoriaId)) : libros;
+        const filtrados = categoriaId ? 
+            libros.filter(lib => lib.categorias_id == parseInt(categoriaId)) : 
+            libros;
+
+        console.log(`📊 Mostrando ${filtrados.length} libros`);
+
+        if (filtrados.length === 0) {
+            tabla.innerHTML = '<tr><td colspan="6" style="text-align: center;">No hay libros</td></tr>';
+            return;
+        }
 
         filtrados.forEach(libro => {
             tabla.innerHTML += `
@@ -176,7 +232,8 @@ async function cargarLibros(categoriaId = null) {
                 </tr>`;
         });
     } catch (err) {
-        console.error('Error al cargar libros:', err);
+        console.error('❌ Error al cargar libros:', err);
+        tabla.innerHTML = '<tr><td colspan="6" style="text-align: center; color: red;">Error cargando libros</td></tr>';
     }
 }
 
@@ -201,8 +258,8 @@ function configurarFormularioLibro() {
 
         try {
             const url = libroEditando
-                ? `${BASE_URL}InventarioLibros/Libros/libros/${libroEditando}/`
-                : `${BASE_URL}InventarioLibros/Libros/libros/`;
+                ? `InventarioLibros/Libros/libros/${libroEditando}/`
+                : `InventarioLibros/Libros/libros/`;
             const method = libroEditando ? 'PUT' : 'POST';
 
             await fetchJson(url, { method, body: JSON.stringify(data) });
@@ -211,14 +268,14 @@ function configurarFormularioLibro() {
             libroEditando = null;
             cargarLibros(categoria);
         } catch (err) {
-            console.error('Error al guardar libro:', err);
+            console.error('❌ Error al guardar libro:', err);
             alert('Error al guardar libro: revisá que la categoría esté seleccionada y los datos sean correctos.');
         }
     });
 
     window.editarLibro = async id => {
         try {
-            const libro = await fetchJson(`${BASE_URL}InventarioLibros/Libros/libros/${id}/`);
+            const libro = await fetchJson(`InventarioLibros/Libros/libros/${id}/`);
             document.getElementById('nombre-libro').value = libro.nombre;
             document.getElementById('categoria-libro').value = libro.categorias_id;
             document.getElementById('costo-libro').value = libro.costoactual;
@@ -226,33 +283,48 @@ function configurarFormularioLibro() {
             libroEditando = id;
             cargarLibros(libro.categorias_id);
         } catch (err) {
-            console.error('Error cargando libro a editar:', err);
+            console.error('❌ Error cargando libro a editar:', err);
         }
     };
 
     window.eliminarLibro = async id => {
         if (!confirm('¿Seguro que querés eliminar este libro?')) return;
         try {
-            await fetchJson(`${BASE_URL}InventarioLibros/Libros/libros/${id}/`, { method: 'DELETE' });
+            await fetchJson(`InventarioLibros/Libros/libros/${id}/`, { method: 'DELETE' });
             alert('¡Libro eliminado!');
             const categoriaId = document.getElementById('categoria-libro').value;
             cargarLibros(categoriaId);
         } catch (err) {
-            console.error('Error al eliminar libro:', err);
+            console.error('❌ Error al eliminar libro:', err);
             alert('No se pudo eliminar el libro.');
         }
     };
 }
 
-// -------------------- ENTRADAS - CÓDIGO MEJORADO --------------------
+// -------------------- ENTRADAS --------------------
 async function cargarLibrosParaEntrada() {
     const select = document.getElementById('select-libro-entrada');
-    if (!select) return;
+    if (!select) {
+        console.warn('❌ Select de libros para entrada no encontrado');
+        return;
+    }
+
     try {
-        const data = await fetchJson(`${BASE_URL}InventarioLibros/Libros/libros/`);
-        const libros = Array.isArray(data) ? data : data.results || [];
+        console.log('📚 Cargando libros para entrada...');
+        const libros = await fetchJson('InventarioLibros/Libros/libros/');
+        
+        console.log(`✅ ${libros.length} libros cargados para entrada`);
 
         select.innerHTML = '<option value="">Seleccionar libro</option>';
+        
+        if (libros.length === 0) {
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = 'No hay libros disponibles';
+            select.appendChild(option);
+            return;
+        }
+
         libros.forEach(lib => {
             const option = document.createElement('option');
             option.value = lib.id;
@@ -265,11 +337,17 @@ async function cargarLibrosParaEntrada() {
         select.addEventListener('change', function() {
             const selectedOption = this.options[this.selectedIndex];
             const stock = selectedOption?.dataset.stock || 0;
-            document.getElementById('stock-actual-entrada').textContent = stock;
+            const stockElement = document.getElementById('stock-actual-entrada');
+            if (stockElement) {
+                stockElement.textContent = stock;
+            }
         });
 
     } catch (err) {
-        console.error('Error al cargar libros para entrada:', err);
+        console.error('❌ Error al cargar libros para entrada:', err);
+        
+        // Fallback: mostrar mensaje de error en el select
+        select.innerHTML = '<option value="">Error cargando libros</option>';
     }
 }
 
@@ -278,8 +356,9 @@ async function cargarTiposEntrada() {
     if (!select) return;
 
     try {
-        const data = await fetchJson(`${BASE_URL}Catalogos/TipoEntrada/tipoentrada/`);
-        const tipos = Array.isArray(data) ? data : data.results || [];
+        const tipos = await fetchJson('Catalogos/TipoEntrada/tipoentrada/');
+        
+        console.log(`✅ Tipos de entrada cargados: ${tipos.length}`);
 
         select.innerHTML = '<option value="">Seleccionar tipo de entrada</option>';
         tipos.forEach(tipo => {
@@ -289,7 +368,8 @@ async function cargarTiposEntrada() {
             select.appendChild(option);
         });
     } catch (err) {
-        console.error('Error cargando tipos de entrada:', err);
+        console.error('❌ Error cargando tipos de entrada:', err);
+        // Fallback básico
         select.innerHTML = `
             <option value="">Seleccionar tipo de entrada</option>
             <option value="1">Compra</option>
@@ -337,7 +417,7 @@ function configurarFormularioEntrada() {
 
             console.log('📤 Creando ENTRADA principal:', entradaData);
 
-            const responseEntrada = await fetch(`${BASE_URL}Catalogos/Entrada/entrada/`, {
+            const responseEntrada = await fetch(`${BASE_URL}/Catalogos/Entrada/entrada/`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(entradaData)
@@ -365,7 +445,7 @@ function configurarFormularioEntrada() {
 
             console.log('📤 Creando DETALLE:', detalleData);
 
-            const responseDetalle = await fetch(`${BASE_URL}Catalogos/Entrada/detalleentrada/`, {
+            const responseDetalle = await fetch(`${BASE_URL}/Catalogos/Entrada/detalleentrada/`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(detalleData)
@@ -376,7 +456,7 @@ function configurarFormularioEntrada() {
                 console.error('❌ Error creando detalle:', errorData);
                 
                 // Rollback: Eliminar la entrada si falla el detalle
-                await fetch(`${BASE_URL}Catalogos/Entrada/entrada/${entradaCreada.id}/`, {
+                await fetch(`${BASE_URL}/Catalogos/Entrada/entrada/${entradaCreada.id}/`, {
                     method: 'DELETE'
                 });
                 
@@ -403,13 +483,15 @@ function configurarFormularioEntrada() {
     });
 }
 
-// -------------------- SALIDAS - CÓDIGO MEJORADO --------------------
+// -------------------- SALIDAS --------------------
 async function cargarLibrosParaSalida() {
     const select = document.getElementById('select-libro-salida');
     if (!select) return;
+    
     try {
-        const data = await fetchJson(`${BASE_URL}InventarioLibros/Libros/libros/`);
-        const libros = Array.isArray(data) ? data : data.results || [];
+        const libros = await fetchJson('InventarioLibros/Libros/libros/');
+        
+        console.log(`✅ ${libros.length} libros cargados para salida`);
 
         select.innerHTML = '<option value="">Seleccionar libro</option>';
         libros.forEach(lib => {
@@ -436,7 +518,7 @@ async function cargarLibrosParaSalida() {
         });
 
     } catch (err) {
-        console.error('Error al cargar libros para salida:', err);
+        console.error('❌ Error al cargar libros para salida:', err);
     }
 }
 
@@ -445,8 +527,9 @@ async function cargarTiposSalida() {
     if (!select) return;
 
     try {
-        const data = await fetchJson(`${BASE_URL}Catalogos/TipoSalida/tiposalida/`);
-        const tipos = Array.isArray(data) ? data : data.results || [];
+        const tipos = await fetchJson('Catalogos/TipoSalida/tiposalida/');
+        
+        console.log(`✅ Tipos de salida cargados: ${tipos.length}`);
 
         select.innerHTML = '<option value="">Seleccionar tipo de salida</option>';
         tipos.forEach(tipo => {
@@ -456,7 +539,8 @@ async function cargarTiposSalida() {
             select.appendChild(option);
         });
     } catch (err) {
-        console.error('Error cargando tipos de salida:', err);
+        console.error('❌ Error cargando tipos de salida:', err);
+        // Fallback básico
         select.innerHTML = `
             <option value="">Seleccionar tipo de salida</option>
             <option value="1">Venta</option>
@@ -493,7 +577,7 @@ function configurarFormularioSalida() {
 
         try {
             // Verificar stock disponible
-            const libro = await fetchJson(`${BASE_URL}InventarioLibros/Libros/libros/${libroId}/`);
+            const libro = await fetchJson(`InventarioLibros/Libros/libros/${libroId}/`);
             if (libro.existencia < cantidad) {
                 return alert(`Stock insuficiente. Disponible: ${libro.existencia}`);
             }
@@ -510,7 +594,7 @@ function configurarFormularioSalida() {
 
             console.log('📤 Creando SALIDA principal:', salidaData);
 
-            const responseSalida = await fetch(`${BASE_URL}Catalogos/Salida/salida/`, {
+            const responseSalida = await fetch(`${BASE_URL}/Catalogos/Salida/salida/`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(salidaData)
@@ -538,7 +622,7 @@ function configurarFormularioSalida() {
 
             console.log('📤 Creando DETALLE salida:', detalleData);
 
-            const responseDetalle = await fetch(`${BASE_URL}Catalogos/Salida/detallesalida/`, {
+            const responseDetalle = await fetch(`${BASE_URL}/Catalogos/Salida/detallesalida/`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(detalleData)
@@ -549,7 +633,7 @@ function configurarFormularioSalida() {
                 console.error('❌ Error creando detalle salida:', errorData);
                 
                 // Rollback: Eliminar la salida si falla el detalle
-                await fetch(`${BASE_URL}Catalogos/Salida/salida/${salidaCreada.id}/`, {
+                await fetch(`${BASE_URL}/Catalogos/Salida/salida/${salidaCreada.id}/`, {
                     method: 'DELETE'
                 });
                 
@@ -575,9 +659,7 @@ function configurarFormularioSalida() {
     });
 }
 
-// -------------------- MÓDULO DE REPORTES MEJORADO --------------------
-
-// Variables globales para reportes
+// -------------------- MÓDULO DE REPORTES --------------------
 let chartInstance = null;
 let reporteData = {
     librosVendidos: [],
@@ -585,23 +667,22 @@ let reporteData = {
     categorias: []
 };
 
-// Función para cargar datos de reportes
 async function cargarDatosReportes() {
     try {
         console.log('📊 Cargando datos para reportes...');
         
-        // Cargar libros más vendidos
-        const ventasData = await fetchJson(`${BASE_URL}Catalogos/Salida/detallesalida/`);
-        reporteData.movimientos = Array.isArray(ventasData) ? ventasData : ventasData.results || [];
+        // Cargar movimientos de salida
+        const ventasData = await fetchJson('Catalogos/Salida/detallesalida/');
+        reporteData.movimientos = ventasData;
         
         // Cargar categorías para el filtro
-        const categoriasData = await fetchJson(`${BASE_URL}InventarioLibros/Categorias/categorias/`);
-        reporteData.categorias = Array.isArray(categoriasData) ? categoriasData : categoriasData.results || [];
+        const categoriasData = await fetchJson('InventarioLibros/Categorias/categorias/');
+        reporteData.categorias = categoriasData;
         
         // Cargar libros para mapear IDs a nombres
-        const librosData = await fetchJson(`${BASE_URL}InventarioLibros/Libros/libros/`);
+        const librosData = await fetchJson('InventarioLibros/Libros/libros/');
         const librosMap = new Map();
-        (Array.isArray(librosData) ? librosData : librosData.results || []).forEach(libro => {
+        librosData.forEach(libro => {
             librosMap.set(libro.id, libro.nombre);
         });
         
@@ -629,7 +710,6 @@ async function cargarDatosReportes() {
     }
 }
 
-// Función para crear gráfico de pastel de libros más vendidos
 function crearGraficoLibrosMasVendidos(filtroMes = null) {
     const ctx = document.getElementById('librosChart');
     if (!ctx) return;
@@ -639,11 +719,8 @@ function crearGraficoLibrosMasVendidos(filtroMes = null) {
         chartInstance.destroy();
     }
     
-    // Filtrar datos por mes si se especifica
     let datosFiltrados = [...reporteData.librosVendidos];
     if (filtroMes) {
-        // Aquí podrías filtrar por mes si tienes datos de fecha en los movimientos
-        // Por ahora mostramos todos los datos
         console.log(`Filtrando por mes: ${filtroMes}`);
     }
     
@@ -718,53 +795,6 @@ function crearGraficoLibrosMasVendidos(filtroMes = null) {
     });
 }
 
-// Función para crear gráfico de barras de ventas por mes
-function crearGraficoVentasPorMes() {
-    const ctx = document.getElementById('ventasMensualesChart');
-    if (!ctx) return;
-    
-    // Agrupar ventas por mes (ejemplo simplificado)
-    const ventasPorMes = {
-        'Ene': 150, 'Feb': 200, 'Mar': 180, 'Abr': 220,
-        'May': 190, 'Jun': 210, 'Jul': 240, 'Ago': 230,
-        'Sep': 260, 'Oct': 280, 'Nov': 300, 'Dic': 350
-    };
-    
-    // En una implementación real, calcularías esto desde los datos
-    const chart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: Object.keys(ventasPorMes),
-            datasets: [{
-                label: 'Ventas Mensuales',
-                data: Object.values(ventasPorMes),
-                backgroundColor: '#36A2EB',
-                borderColor: '#1E6CB3',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'Ventas Mensuales'
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: 'Unidades Vendidas'
-                    }
-                }
-            }
-        }
-    });
-}
-
-// Función para crear HTML del panel de reportes
 function crearPanelReportes() {
     const reporteSection = document.getElementById('reporte-form');
     if (!reporteSection) return;
@@ -870,7 +900,6 @@ function crearPanelReportes() {
     configurarControlesReporte();
 }
 
-// Función para configurar los controles del reporte
 function configurarControlesReporte() {
     const filtroMes = document.getElementById('filtro-mes');
     const tipoGrafico = document.getElementById('tipo-grafico');
@@ -889,7 +918,6 @@ function configurarControlesReporte() {
     }
 }
 
-// Función para actualizar todo el reporte
 async function actualizarReporte() {
     try {
         console.log('🔄 Actualizando reporte...');
@@ -914,8 +942,7 @@ async function actualizarReporte() {
         if (tipoGrafico === 'pastel') {
             crearGraficoLibrosMasVendidos(filtroMes);
         } else {
-            // Para gráfico de barras podrías implementar una función similar
-            crearGraficoLibrosMasVendidos(filtroMes); // Por ahora usa el mismo
+            crearGraficoLibrosMasVendidos(filtroMes);
         }
         
         // Actualizar lista top libros
@@ -939,11 +966,10 @@ async function actualizarReporte() {
     }
 }
 
-// Función para actualizar las estadísticas rápidas
 function actualizarEstadisticasRapidas() {
     const totalVendido = reporteData.librosVendidos.reduce((sum, libro) => sum + libro.cantidad, 0);
     const totalLibros = reporteData.librosVendidos.length;
-    const promedioMes = Math.round(totalVendido / 12); // Simplificado
+    const promedioMes = Math.round(totalVendido / 12);
     const libroTop = reporteData.librosVendidos[0]?.nombre || '-';
     
     document.getElementById('total-vendido').textContent = totalVendido.toLocaleString();
@@ -952,7 +978,6 @@ function actualizarEstadisticasRapidas() {
     document.getElementById('libro-top').textContent = libroTop;
 }
 
-// Función para actualizar la lista top libros
 function actualizarListaTopLibros() {
     const listaContainer = document.getElementById('lista-top-libros');
     if (!listaContainer) return;
@@ -976,7 +1001,6 @@ function actualizarListaTopLibros() {
     `).join('');
 }
 
-// Función para actualizar la tabla detalle de ventas
 function actualizarTablaDetalleVentas() {
     const tablaBody = document.getElementById('tabla-detalle-ventas');
     if (!tablaBody) return;
@@ -1003,6 +1027,11 @@ function actualizarTablaDetalleVentas() {
 document.addEventListener('DOMContentLoaded', () => {
     const usuario = getUsuario();
 
+    // Verificar conexión
+    setTimeout(() => {
+        verificarConexion();
+    }, 500);
+
     // Navegación menú
     const enlacesMenu = document.querySelectorAll('#MenuVertical ul.ul_MenuVertical li a');
     const formularios = document.querySelectorAll('.form-section');
@@ -1026,12 +1055,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else if (formId === 'salidas-form') {
                     cargarLibrosParaSalida();
                     cargarTiposSalida();
+                } else if (formId === 'reporte-form') {
+                    setTimeout(() => {
+                        cargarDatosReportes();
+                        actualizarEstadisticasRapidas();
+                        crearGraficoLibrosMasVendidos();
+                        actualizarListaTopLibros();
+                        actualizarTablaDetalleVentas();
+                    }, 100);
                 }
             }
         });
     });
 
-    // Inicialización de formularios (agregar reportes)
+    // Inicialización de formularios
     if (document.getElementById('form-categorias')) configurarFormularioCategoria();
     if (document.getElementById('form-libros')) {
         cargarCategoriasParaLibros();
@@ -1048,19 +1085,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // INICIALIZAR REPORTES
     if (document.getElementById('reporte-form')) {
         crearPanelReportes();
-        // Cargar datos iniciales cuando se muestre el reporte
-        const enlaceReporte = document.querySelector('a[data-form="reporte-form"]');
-        if (enlaceReporte) {
-            enlaceReporte.addEventListener('click', async function() {
-                await cargarDatosReportes();
-                actualizarEstadisticasRapidas();
-                crearGraficoLibrosMasVendidos();
-                actualizarListaTopLibros();
-                actualizarTablaDetalleVentas();
-            });
-        }
     }
-
 
     // Logout
     const btnSalir = document.getElementById('btn-cerrar-sesion');
@@ -1070,22 +1095,6 @@ document.addEventListener('DOMContentLoaded', () => {
             window.location.href = '/index.html';
         }
     });
-
-    // Inicialización de formularios
-    if (document.getElementById('form-categorias')) configurarFormularioCategoria();
-    if (document.getElementById('form-libros')) {
-        cargarCategoriasParaLibros();
-        configurarFormularioLibro();
-        cargarLibros();
-    }
-    if (document.getElementById('form-entradas')) {
-        configurarFormularioEntrada();
-        // Los datos se cargarán cuando se muestre el formulario
-    }
-    if (document.getElementById('form-salidas')) {
-        configurarFormularioSalida();
-        // Los datos se cargarán cuando se muestre el formulario
-    }
 });
 
 // Funcionalidad responsiva para móviles
@@ -1131,23 +1140,3 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
