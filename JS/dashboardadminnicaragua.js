@@ -1,5 +1,5 @@
 /// -------------------- CONFIGURACIÓN GENERAL --------------------
-const BASE_URL = 'https://afdd34068c0c.ngrok-free.app/';
+const BASE_URL = 'http://127.0.0.1:8000/';
 
 // -------------------- FUNCIÓN FETCH MEJORADA CON PAGINACIÓN --------------------
 async function fetchJson(url, options = {}) {
@@ -13,6 +13,11 @@ async function fetchJson(url, options = {}) {
         fullUrl = `${base}${path}`;
     }
     
+    // Forzar paginación grande para GET requests
+    if ((!options.method || options.method === 'GET') && !fullUrl.includes('?')) {
+        fullUrl += '?page_size=1000';
+    }
+    
     console.log(`🌐 Fetch: ${fullUrl}`);
     
     try {
@@ -21,10 +26,10 @@ async function fetchJson(url, options = {}) {
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
-                ...options.headers
+                ...options.headerssame-origin
             },
             body: options.body,
-            credentials: 'include'
+            credentials: 'same-origin'
         });
 
         if (!response.ok) {
@@ -32,7 +37,7 @@ async function fetchJson(url, options = {}) {
         }
 
         const data = await response.json();
-        console.log(`📦 Response data:`, data);
+        console.log(`📦 Response completa:`, data);
 
         // ✅ MANEJAR PAGINACIÓN - Si tiene 'results', devolver eso
         if (data && typeof data === 'object' && Array.isArray(data.results)) {
@@ -67,6 +72,14 @@ async function verificarConexion() {
         console.log(`✅ CONEXIÓN EXITOSA:`);
         console.log(`   - Categorías: ${categorias.length}`);
         console.log(`   - Libros: ${libros.length}`);
+        
+        // Mostrar ejemplos para debug
+        if (categorias.length > 0) {
+            console.log('   - Ejemplo categoría:', categorias[0]);
+        }
+        if (libros.length > 0) {
+            console.log('   - Ejemplo libro:', libros[0]);
+        }
         
         return true;
     } catch (error) {
@@ -125,12 +138,16 @@ async function actualizarExistenciaLibro(libroId, cantidad, operacion = 'entrada
 // -------------------- CATEGORÍAS --------------------
 async function cargarCategoriasParaLibros() {
     const select = document.getElementById('categoria-libro');
-    if (!select) return;
+    if (!select) {
+        console.warn('❌ Select de categorías no encontrado');
+        return;
+    }
 
     try {
+        console.log('🔄 Cargando categorías...');
         const categorias = await fetchJson('InventarioLibros/Categorias/categorias/');
         
-        console.log(`✅ Categorías cargadas: ${categorias.length}`);
+        console.log(`✅ Categorías cargadas:`, categorias);
 
         select.innerHTML = '';
         const opcionInicial = document.createElement('option');
@@ -138,16 +155,25 @@ async function cargarCategoriasParaLibros() {
         opcionInicial.textContent = 'Seleccione una categoría';
         select.appendChild(opcionInicial);
 
-        categorias.forEach(cat => {
+        if (categorias && categorias.length > 0) {
+            categorias.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat.id;
+                option.textContent = cat.nombre;
+                select.appendChild(option);
+            });
+            console.log(`✅ ${categorias.length} categorías agregadas al select`);
+        } else {
+            console.warn('⚠️ No se encontraron categorías');
             const option = document.createElement('option');
-            option.value = cat.id;
-            option.textContent = cat.nombre;
+            option.value = '';
+            option.textContent = 'No hay categorías disponibles';
             select.appendChild(option);
-        });
+        }
         
-        console.log(`✅ ${categorias.length} categorías agregadas al select`);
     } catch (err) {
         console.error('❌ Error cargando categorías para libros:', err);
+        select.innerHTML = '<option value="">Error cargando categorías</option>';
     }
 }
 
@@ -170,7 +196,7 @@ function configurarFormularioCategoria() {
             alert(editandoId ? '¡Categoría actualizada!' : '¡Categoría registrada!');
             form.reset();
             editandoId = null;
-            cargarCategoriasParaLibros();
+            await cargarCategoriasParaLibros();
         } catch (err) {
             console.error('❌ Error guardando categoría:', err);
             alert('Error al guardar categoría');
@@ -188,7 +214,7 @@ window.eliminarCategoria = async id => {
     try {
         await fetchJson(`InventarioLibros/Categorias/categorias/${id}/`, { method: 'DELETE' });
         alert('¡Categoría eliminada!');
-        cargarCategoriasParaLibros();
+        await cargarCategoriasParaLibros();
     } catch (err) {
         console.error('❌ Error al eliminar categoría:', err);
         alert('No se pudo eliminar la categoría.');
@@ -198,14 +224,25 @@ window.eliminarCategoria = async id => {
 // -------------------- LIBROS --------------------
 async function cargarLibros(categoriaId = null) {
     const tabla = document.querySelector('#tabla-inventario tbody');
-    if (!tabla) return;
+    if (!tabla) {
+        console.warn('❌ Tabla de inventario no encontrada');
+        return;
+    }
     
     try {
+        console.log('🔄 Cargando libros...');
         const libros = await fetchJson('InventarioLibros/Libros/libros/');
         
-        console.log(`✅ Libros cargados: ${libros.length}`);
+        console.log(`✅ Libros cargados:`, libros);
 
         tabla.innerHTML = '';
+        
+        if (!libros || libros.length === 0) {
+            tabla.innerHTML = '<tr><td colspan="6" style="text-align: center;">No hay libros registrados</td></tr>';
+            console.log('📭 No hay libros para mostrar');
+            return;
+        }
+
         const filtrados = categoriaId ? 
             libros.filter(lib => lib.categorias_id == parseInt(categoriaId)) : 
             libros;
@@ -213,24 +250,28 @@ async function cargarLibros(categoriaId = null) {
         console.log(`📊 Mostrando ${filtrados.length} libros`);
 
         if (filtrados.length === 0) {
-            tabla.innerHTML = '<tr><td colspan="6" style="text-align: center;">No hay libros</td></tr>';
+            tabla.innerHTML = '<tr><td colspan="6" style="text-align: center;">No hay libros en esta categoría</td></tr>';
             return;
         }
 
         filtrados.forEach(libro => {
-            tabla.innerHTML += `
-                <tr>
-                  <td>${libro.id || '—'}</td>
-                  <td>${libro.nombre || '—'}</td>
-                  <td>${libro.categorias_nombre || '—'}</td>
-                  <td>${libro.costoactual || 0}</td>
-                  <td>${libro.existencia || 0}</td>
-                  <td>
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${libro.id || '—'}</td>
+                <td>${libro.nombre || '—'}</td>
+                <td>${libro.categorias_nombre || '—'}</td>
+                <td>${libro.costoactual || 0}</td>
+                <td>${libro.existencia || 0}</td>
+                <td>
                     <button onclick="editarLibro(${libro.id})">Editar</button>
                     <button onclick="eliminarLibro(${libro.id})">Eliminar</button>
-                  </td>
-                </tr>`;
+                </td>
+            `;
+            tabla.appendChild(row);
         });
+        
+        console.log(`✅ Tabla actualizada con ${filtrados.length} libros`);
+        
     } catch (err) {
         console.error('❌ Error al cargar libros:', err);
         tabla.innerHTML = '<tr><td colspan="6" style="text-align: center; color: red;">Error cargando libros</td></tr>';
@@ -266,7 +307,7 @@ function configurarFormularioLibro() {
             alert(libroEditando ? '¡Libro actualizado!' : '¡Libro registrado!');
             form.reset();
             libroEditando = null;
-            cargarLibros(categoria);
+            await cargarLibros(categoria);
         } catch (err) {
             console.error('❌ Error al guardar libro:', err);
             alert('Error al guardar libro: revisá que la categoría esté seleccionada y los datos sean correctos.');
@@ -281,7 +322,7 @@ function configurarFormularioLibro() {
             document.getElementById('costo-libro').value = libro.costoactual;
             document.getElementById('existencia-libro').value = libro.existencia;
             libroEditando = id;
-            cargarLibros(libro.categorias_id);
+            await cargarLibros(libro.categorias_id);
         } catch (err) {
             console.error('❌ Error cargando libro a editar:', err);
         }
@@ -293,7 +334,7 @@ function configurarFormularioLibro() {
             await fetchJson(`InventarioLibros/Libros/libros/${id}/`, { method: 'DELETE' });
             alert('¡Libro eliminado!');
             const categoriaId = document.getElementById('categoria-libro').value;
-            cargarLibros(categoriaId);
+            await cargarLibros(categoriaId);
         } catch (err) {
             console.error('❌ Error al eliminar libro:', err);
             alert('No se pudo eliminar el libro.');
@@ -345,8 +386,6 @@ async function cargarLibrosParaEntrada() {
 
     } catch (err) {
         console.error('❌ Error al cargar libros para entrada:', err);
-        
-        // Fallback: mostrar mensaje de error en el select
         select.innerHTML = '<option value="">Error cargando libros</option>';
     }
 }
@@ -369,7 +408,6 @@ async function cargarTiposEntrada() {
         });
     } catch (err) {
         console.error('❌ Error cargando tipos de entrada:', err);
-        // Fallback básico
         select.innerHTML = `
             <option value="">Seleccionar tipo de entrada</option>
             <option value="1">Compra</option>
@@ -417,19 +455,11 @@ function configurarFormularioEntrada() {
 
             console.log('📤 Creando ENTRADA principal:', entradaData);
 
-            const responseEntrada = await fetch(`${BASE_URL}/Catalogos/Entrada/entrada/`, {
+            const entradaCreada = await fetchJson('Catalogos/Entrada/entrada/', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(entradaData)
             });
 
-            if (!responseEntrada.ok) {
-                const errorData = await responseEntrada.json();
-                console.error('❌ Error creando entrada:', errorData);
-                throw new Error(`Error al crear entrada: ${JSON.stringify(errorData)}`);
-            }
-
-            const entradaCreada = await responseEntrada.json();
             console.log('✅ Entrada creada:', entradaCreada);
 
             // SEGUNDO: Crear el DETALLE con referencia a la entrada
@@ -445,26 +475,10 @@ function configurarFormularioEntrada() {
 
             console.log('📤 Creando DETALLE:', detalleData);
 
-            const responseDetalle = await fetch(`${BASE_URL}/Catalogos/Entrada/detalleentrada/`, {
+            await fetchJson('Catalogos/Entrada/detalleentrada/', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(detalleData)
             });
-
-            if (!responseDetalle.ok) {
-                const errorData = await responseDetalle.json();
-                console.error('❌ Error creando detalle:', errorData);
-                
-                // Rollback: Eliminar la entrada si falla el detalle
-                await fetch(`${BASE_URL}/Catalogos/Entrada/entrada/${entradaCreada.id}/`, {
-                    method: 'DELETE'
-                });
-                
-                throw new Error(`Error al crear detalle: ${JSON.stringify(errorData)}`);
-            }
-
-            const detalleCreado = await responseDetalle.json();
-            console.log('✅ Detalle creado:', detalleCreado);
 
             // TERCERO: ACTUALIZAR LA EXISTENCIA DEL LIBRO
             await actualizarExistenciaLibro(libroId, cantidad, 'entrada');
@@ -540,7 +554,6 @@ async function cargarTiposSalida() {
         });
     } catch (err) {
         console.error('❌ Error cargando tipos de salida:', err);
-        // Fallback básico
         select.innerHTML = `
             <option value="">Seleccionar tipo de salida</option>
             <option value="1">Venta</option>
@@ -594,19 +607,11 @@ function configurarFormularioSalida() {
 
             console.log('📤 Creando SALIDA principal:', salidaData);
 
-            const responseSalida = await fetch(`${BASE_URL}/Catalogos/Salida/salida/`, {
+            const salidaCreada = await fetchJson('Catalogos/Salida/salida/', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(salidaData)
             });
 
-            if (!responseSalida.ok) {
-                const errorData = await responseSalida.json();
-                console.error('❌ Error creando salida:', errorData);
-                throw new Error(`Error al crear salida: ${JSON.stringify(errorData)}`);
-            }
-
-            const salidaCreada = await responseSalida.json();
             console.log('✅ Salida creada:', salidaCreada);
 
             // SEGUNDO: Crear el DETALLE con referencia a la salida
@@ -622,26 +627,10 @@ function configurarFormularioSalida() {
 
             console.log('📤 Creando DETALLE salida:', detalleData);
 
-            const responseDetalle = await fetch(`${BASE_URL}/Catalogos/Salida/detallesalida/`, {
+            await fetchJson('Catalogos/Salida/detallesalida/', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(detalleData)
             });
-
-            if (!responseDetalle.ok) {
-                const errorData = await responseDetalle.json();
-                console.error('❌ Error creando detalle salida:', errorData);
-                
-                // Rollback: Eliminar la salida si falla el detalle
-                await fetch(`${BASE_URL}/Catalogos/Salida/salida/${salidaCreada.id}/`, {
-                    method: 'DELETE'
-                });
-                
-                throw new Error(`Error al crear detalle salida: ${JSON.stringify(errorData)}`);
-            }
-
-            const detalleCreado = await responseDetalle.json();
-            console.log('✅ Detalle salida creado:', detalleCreado);
 
             // TERCERO: ACTUALIZAR LA EXISTENCIA DEL LIBRO
             await actualizarExistenciaLibro(libroId, cantidad, 'salida');
@@ -1024,19 +1013,29 @@ function actualizarTablaDetalleVentas() {
 }
 
 // -------------------- NAVEGACIÓN MENÚ Y LOGOUT --------------------
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     const usuario = getUsuario();
 
-    // Verificar conexión
-    setTimeout(() => {
-        verificarConexion();
+    console.log('🚀 Iniciando aplicación...');
+
+    // Verificar conexión inmediatamente
+    setTimeout(async () => {
+        const conexionOk = await verificarConexion();
+        if (conexionOk) {
+            console.log('🎉 Backend conectado - Cargando datos iniciales...');
+            
+            // Cargar datos esenciales inmediatamente
+            await cargarCategoriasParaLibros();
+            await cargarLibros();
+        }
     }, 500);
 
-    // Navegación menú
+    // Navegación menú MEJORADA
     const enlacesMenu = document.querySelectorAll('#MenuVertical ul.ul_MenuVertical li a');
     const formularios = document.querySelectorAll('.form-section');
+    
     enlacesMenu.forEach(enlace => {
-        enlace.addEventListener('click', e => {
+        enlace.addEventListener('click', async e => {
             e.preventDefault();
             enlacesMenu.forEach(el => el.classList.remove('active'));
             enlace.classList.add('active');
@@ -1047,23 +1046,38 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (formElement) {
                 formElement.classList.add('active-form');
+                console.log(`🎯 Cambiando a sección: ${formId}`);
                 
-                // Cargar datos específicos cuando se muestra el formulario
-                if (formId === 'entradas-form') {
-                    cargarLibrosParaEntrada();
-                    cargarTiposEntrada();
-                } else if (formId === 'salidas-form') {
-                    cargarLibrosParaSalida();
-                    cargarTiposSalida();
-                } else if (formId === 'reporte-form') {
-                    setTimeout(() => {
-                        cargarDatosReportes();
-                        actualizarEstadisticasRapidas();
-                        crearGraficoLibrosMasVendidos();
-                        actualizarListaTopLibros();
-                        actualizarTablaDetalleVentas();
-                    }, 100);
-                }
+                // CARGAR DATOS ESPECÍFICOS CON RETRASO PARA ESTABILIDAD
+                setTimeout(async () => {
+                    try {
+                        if (formId === 'categorias-form') {
+                            console.log('🔄 Recargando datos de categorías...');
+                            await cargarCategoriasParaLibros();
+                        } else if (formId === 'libros-form') {
+                            console.log('🔄 Recargando datos de libros...');
+                            await cargarCategoriasParaLibros();
+                            await cargarLibros();
+                        } else if (formId === 'entradas-form') {
+                            console.log('🔄 Recargando datos para entradas...');
+                            await cargarLibrosParaEntrada();
+                            await cargarTiposEntrada();
+                        } else if (formId === 'salidas-form') {
+                            console.log('🔄 Recargando datos para salidas...');
+                            await cargarLibrosParaSalida();
+                            await cargarTiposSalida();
+                        } else if (formId === 'reporte-form') {
+                            console.log('🔄 Cargando reportes...');
+                            await cargarDatosReportes();
+                            actualizarEstadisticasRapidas();
+                            crearGraficoLibrosMasVendidos();
+                            actualizarListaTopLibros();
+                            actualizarTablaDetalleVentas();
+                        }
+                    } catch (error) {
+                        console.error(`❌ Error cargando datos para ${formId}:`, error);
+                    }
+                }, 100);
             }
         });
     });
@@ -1071,9 +1085,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Inicialización de formularios
     if (document.getElementById('form-categorias')) configurarFormularioCategoria();
     if (document.getElementById('form-libros')) {
-        cargarCategoriasParaLibros();
         configurarFormularioLibro();
-        cargarLibros();
     }
     if (document.getElementById('form-entradas')) {
         configurarFormularioEntrada();
